@@ -1,17 +1,17 @@
 ### .Net SDK
 
 
-####Availability
+#### Availability
 Supports .Net 4.5 and 4.6
 
 
-####How to install
+#### How to install
 
 ```
 nuget install nps_sdk
 ```
 
-####Configuration
+#### Configuration
 
 It's a basic configuration of the SDK
 
@@ -55,7 +55,7 @@ catch (Exception ex)
 }
 ```
 
-####Environments
+#### Environments
 
 ```C#
 NpsSdk.IngenicoEnvironment.SandBox
@@ -63,7 +63,7 @@ NpsSdk.IngenicoEnvironment.Implementation
 NpsSdk.IngenicoEnvironment.Production
 ```
 
-####Error handling
+#### Error handling
 
 Exceptions must be handled by user code, when LogLevel is set to Debug they will be logged
 
