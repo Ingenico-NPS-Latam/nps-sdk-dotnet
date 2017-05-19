@@ -21,8 +21,6 @@ using IngenicoSDK;
 var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.IngenicoEnvironment.SandBox, "_YOUR_SECRET_KEY_", new DebugLogger()));
 ```
 
-
-
 Here is an simple example request:
 
 ```C#
@@ -67,6 +65,7 @@ NpsSdk.IngenicoEnvironment.Production
 
 Exceptions must be handled by user code, when LogLevel is set to Debug they will be logged
 
+```
 #Code
 try
 {
@@ -78,7 +77,7 @@ catch (Exception ex)
 }
 ```
 
-####Advanced configurations
+#### Advanced configurations
 
 Nps SDK allows you to log what’s happening with you request inside of our SDK, it logs by default to System.Diagnostics.Debug
 
