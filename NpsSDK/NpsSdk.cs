@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Text;
 using System.Web.Services.Description;
 using System.Xml;
 using System.Xml.Schema;
@@ -116,20 +114,50 @@ namespace NpsSDK
             /// <param name="proxy"></param>
             public WsdlHandlerConfiguration(LogLevel logLevel, NpsEnvironment npsEnvironment, String secretKey, ILogger logger = null, Int32 requestTimeout = 100, IWebProxy proxy = null)
             {
-                LogLevel = logLevel;
-                NpsEnvironment = npsEnvironment;
-                SecretKey = secretKey;
-                RequestTimeout = requestTimeout;
-                Proxy = proxy;
-                Logger = new LogWrapper(logLevel, logger ?? new DebugLogger());
+                _logLevel = logLevel;
+                _npsEnvironment = npsEnvironment;
+                _secretKey = secretKey;
+                _requestTimeOut = requestTimeout;
+                _proxy = proxy;
+                _logger = new LogWrapper(logLevel, logger ?? new DebugLogger());
             }
 
-            public NpsEnvironment NpsEnvironment { get; }
-            public LogLevel LogLevel { get; }
-            internal String SecretKey { get; }
-            internal LogWrapper Logger { get; }
-            internal Int32 RequestTimeout { get; }
-            internal IWebProxy Proxy { get; }
+            private NpsEnvironment _npsEnvironment;
+            private LogLevel _logLevel;
+            private String _secretKey;
+            private LogWrapper _logger;
+            private Int32 _requestTimeOut;
+            private IWebProxy _proxy;
+
+            internal NpsEnvironment NpsEnvironment
+            {
+                get { return _npsEnvironment; }
+            }
+
+            internal LogLevel LogLevel
+            {
+                get { return _logLevel; }
+            }
+
+            internal String SecretKey
+            {
+                get { return _secretKey; }
+            }
+
+            internal LogWrapper Logger
+            {
+                get { return _logger; }
+            }
+
+            internal Int32 RequestTimeout
+            {
+                get { return _requestTimeOut; }
+            }
+
+            internal IWebProxy Proxy
+            {
+                get { return _proxy; }
+            }
 
             internal String LocalWsdlPath
             {
@@ -164,13 +192,10 @@ namespace NpsSDK
             {
                 if (wsdlHandlerConfiguration.LogLevel == LogLevel.Debug && wsdlHandlerConfiguration.NpsEnvironment == NpsEnvironment.Production)
                 {
-                    throw new ArgumentException("LogLevel can't be set to Debug on Production environment", nameof(wsdlHandlerConfiguration));
+                    throw new ArgumentException("LogLevel can't be set to Debug on Production environment", "wsdlHandlerConfiguration");
                 }
 
                 _wsdlHandlerConfiguration = wsdlHandlerConfiguration;
-
-                _services = new List<ServiceDefinition>();
-                _types = new Dictionary<String, ComplexType>();
 
                 var pathWsdl = _wsdlHandlerConfiguration.LocalWsdlPath;
                 if (!File.Exists(pathWsdl) && !DownloadWsdl(pathWsdl))
@@ -180,65 +205,9 @@ namespace NpsSDK
 
                 var serviceDescription = ServiceDescription.Read(pathWsdl);
 
-                Types types = serviceDescription.Types;
-                XmlSchema xmlSchema = types.Schemas[0];
+                _types = GetTypes(serviceDescription);
 
-                foreach (XmlSchemaObject item in xmlSchema.Items)
-                {
-                    XmlSchemaComplexType xmlSchemaComplexType = item as XmlSchemaComplexType;
-                    if (xmlSchemaComplexType == null)
-                    {
-                        continue;
-                    }
-
-                    var complexType = new ComplexType
-                    {
-                        TypeName = xmlSchemaComplexType.Name,
-                        IsArray = xmlSchemaComplexType.ContentModel != null && xmlSchemaComplexType.ContentModel.Content is XmlSchemaComplexContentRestriction && ((XmlSchemaComplexContentRestriction)xmlSchemaComplexType.ContentModel.Content).BaseTypeName.Name.ToLower() == "array",
-                        IsMandatory = false,
-                        Attributes = new List<Attribute>()
-                    };
-                    if (complexType.IsArray && xmlSchemaComplexType.ContentModel != null)
-                    {
-                        complexType.TypeName = ((XmlSchemaAttribute)((XmlSchemaComplexContentRestriction)xmlSchemaComplexType.ContentModel.Content).Attributes[0]).UnhandledAttributes[0].OuterXml.Split(':').Last().Replace("[]\"", "");
-                    }
-
-                    OutputElements(complexType, xmlSchemaComplexType.Particle);
-
-                    _types.Add(xmlSchemaComplexType.Name, complexType);
-                }
-
-                foreach (PortType portType in serviceDescription.PortTypes)
-                {
-                    foreach (Operation operation in portType.Operations)
-                    {
-                        ServiceDefinition serviceDefinition = new ServiceDefinition(_wsdlHandlerConfiguration)
-                        {
-                            ServiceName = operation.Name
-                        };
-
-                        foreach (OperationMessage message in operation.Messages)
-                        {
-                            var parameter = serviceDescription.Messages.Cast<Message>().FirstOrDefault(x => x.Name == message.Message.Name);
-
-                            OperationInput operationInput = message as OperationInput;
-                            if (operationInput != null)
-                            {
-                                serviceDefinition.InputType = parameter != null && parameter.Parts.Count > 0 ? parameter.Parts[0].Type.Name : String.Empty;
-                                serviceDefinition.InputParameterName = parameter != null && parameter.Parts.Count > 0 ? parameter.Parts[0].Name : String.Empty;
-                            }
-                            OperationOutput operationOutput = message as OperationOutput;
-                            if (operationOutput != null)
-                            {
-                                serviceDefinition.OutputType = parameter != null && parameter.Parts.Count > 0 ? parameter.Parts[0].Type.Name : String.Empty;
-                                serviceDefinition.OutputParameterName = parameter != null && parameter.Parts.Count > 0 ? parameter.Parts[0].Name : String.Empty;
-                            }
-                        }
-                        serviceDefinition.Input = GetTypeDefinition(serviceDefinition.InputType);
-                        serviceDefinition.Output = GetTypeDefinition(serviceDefinition.OutputType);
-                        _services.Add(serviceDefinition);
-                    }
-                }
+                _services = GetServices(serviceDescription, wsdlHandlerConfiguration);
             }
             catch (Exception ex)
             {
@@ -247,7 +216,75 @@ namespace NpsSDK
             }
         }
 
-        public class Node
+        private List<ServiceDefinition> GetServices(ServiceDescription serviceDescription, WsdlHandlerConfiguration wsdlHandlerConfiguration)
+        {
+            var services = new List<ServiceDefinition>();
+            foreach (PortType portType in serviceDescription.PortTypes)
+            {
+                foreach (Operation operation in portType.Operations)
+                {
+                    ServiceDefinition serviceDefinition = new ServiceDefinition(wsdlHandlerConfiguration)
+                    {
+                        ServiceName = operation.Name
+                    };
+
+                    foreach (OperationMessage message in operation.Messages)
+                    {
+                        var parameter = serviceDescription.Messages.Cast<Message>().FirstOrDefault(x => x.Name == message.Message.Name);
+
+                        OperationInput operationInput = message as OperationInput;
+                        if (operationInput != null)
+                        {
+                            serviceDefinition.InputType = parameter != null && parameter.Parts.Count > 0 ? parameter.Parts[0].Type.Name : String.Empty;
+                            serviceDefinition.InputParameterName = parameter != null && parameter.Parts.Count > 0 ? parameter.Parts[0].Name : String.Empty;
+                        }
+                        OperationOutput operationOutput = message as OperationOutput;
+                        if (operationOutput != null)
+                        {
+                            serviceDefinition.OutputType = parameter != null && parameter.Parts.Count > 0 ? parameter.Parts[0].Type.Name : String.Empty;
+                            serviceDefinition.OutputParameterName = parameter != null && parameter.Parts.Count > 0 ? parameter.Parts[0].Name : String.Empty;
+                        }
+                    }
+                    serviceDefinition.Input = GetTypeDefinition(serviceDefinition.InputType);
+                    serviceDefinition.Output = GetTypeDefinition(serviceDefinition.OutputType);
+                    services.Add(serviceDefinition);
+                }
+            }
+            return services;
+        }
+
+        private static Dictionary<String, ComplexType> GetTypes(ServiceDescription serviceDescription)
+        {
+            var types = new Dictionary<String, ComplexType>();
+            foreach (XmlSchemaObject item in serviceDescription.Types.Schemas[0].Items)
+            {
+                XmlSchemaComplexType xmlSchemaComplexType = item as XmlSchemaComplexType;
+                if (xmlSchemaComplexType == null)
+                {
+                    continue;
+                }
+
+                var complexType = new ComplexType
+                {
+                    TypeName = xmlSchemaComplexType.Name,
+                    IsArray = xmlSchemaComplexType.ContentModel != null && xmlSchemaComplexType.ContentModel.Content is XmlSchemaComplexContentRestriction && ((XmlSchemaComplexContentRestriction)xmlSchemaComplexType.ContentModel.Content).BaseTypeName.Name.ToLower() == "array",
+                    IsMandatory = false,
+                    Attributes = new List<Attribute>()
+                };
+                if (complexType.IsArray && xmlSchemaComplexType.ContentModel != null)
+                {
+                    complexType.TypeName = ((XmlSchemaAttribute)((XmlSchemaComplexContentRestriction)xmlSchemaComplexType.ContentModel.Content).Attributes[0]).UnhandledAttributes[0].OuterXml.Split(':').Last().Replace("[]\"", "");
+                }
+
+                OutputElements(complexType, xmlSchemaComplexType.Particle);
+
+                types.Add(xmlSchemaComplexType.Name, complexType);
+            }
+
+            return types;
+        }
+
+        private class Node
         {
             public String NodeName { get; set; }
             public String NodeType { get; set; }
@@ -258,7 +295,7 @@ namespace NpsSDK
             public Boolean IsSimpleType { get; set; }
         }
 
-        public class ServiceDefinition
+        private class ServiceDefinition
         {
             private readonly WsdlHandlerConfiguration _wsdlHandlerConfiguration;
 
@@ -301,18 +338,7 @@ namespace NpsSDK
 
                     if (compare < 0)
                     {
-                        if (nodeChildren[nodeCounter].IsMandatory)
-                        {
-                            errors.Add("Missing field: " + path + nodeChildren[nodeCounter].NodeName);
-                        }
-                        if (nodeChildren[nodeCounter].NodeName == "psp_SecureHash" && data is RootElement && !data.Children.Exists(x => x.Name == "psp_ClientSession"))
-                        {
-                            data.Children.Add(new SimpleElement("psp_SecureHash", ((RootElement)data).SecureHash(_wsdlHandlerConfiguration.SecretKey)));
-                        }
-                        if (nodeChildren[nodeCounter].NodeName == "SdkInfo")
-                        {
-                            data.Children.Add(new SimpleElement("SdkInfo", SdkVersion));
-                        }
+                        ValidateMissingField(data, nodeChildren, path, nodeCounter, errors);
                         nodeCounter++;
                         continue;
                     }
@@ -325,65 +351,93 @@ namespace NpsSDK
                         continue;
                     }
 
-                    if (!nodeChildren[nodeCounter].IsSimpleType != dataChildren[dataCounter] is ComplexElement)
-                    {
-                        if (!nodeChildren[nodeCounter].IsArray || (dataChildren[dataCounter] is ComplexElementArray == false && dataChildren[dataCounter] is SimpleElementArray == false))
-                        {
-                            errors.Add("Wrong field type: " + dataChildren[dataCounter].Name);
-                        }
-                        else
-                        {
-                            if (nodeChildren[nodeCounter].IsArray)
-                            {
-                                if (dataChildren[dataCounter] is ComplexElementArray)
-                                {
-                                    ((ComplexElementArray)dataChildren[dataCounter]).ChildType = nodeChildren[nodeCounter].ArrayBaseType.NodeType;
-                                }
-                                for (int i = 0; i < dataChildren[dataCounter].Children.Count; i++)
-                                {
-                                    BaseElement arrayElement = dataChildren[dataCounter].Children[i];
-                                    if (arrayElement is ComplexElementArrayItem == nodeChildren[nodeCounter].ArrayBaseType.IsSimpleType)
-                                    {
-                                        errors.Add("Wrong type in array: " + path + dataChildren[dataCounter].Name);
-                                    }
-                                    else
-                                    {
-                                        List<string> innerErrors;
-                                        if (!Validate(arrayElement, nodeChildren[nodeCounter].ArrayBaseType, String.Format("{0}{1}[{2}] --> ", path, nodeChildren[nodeCounter].NodeName, i), out innerErrors))
-                                        {
-                                            errors.AddRange(innerErrors);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else if (!nodeChildren[nodeCounter].IsSimpleType)
-                    {
-                        List<String> innerErrors;
-                        Validate(dataChildren[dataCounter], nodeChildren[nodeCounter], String.Format("{0}{1} --> ", path, nodeChildren[nodeCounter].NodeName), out innerErrors);
-                        errors.AddRange(innerErrors);
-                    }
-                    else
-                    {
-                        if (!String.IsNullOrWhiteSpace(parentNode.NodeName))
-                        {
-                            var simpleElement = dataChildren[dataCounter] as SimpleElement;
-                            if (simpleElement != null)
-                            {
-                                String key = String.Format("{0}.{1}", parentNode.NodeName, simpleElement.Name);
+                    ValidateMatchingField(dataChildren, nodeChildren, dataCounter, nodeCounter, parentNode, path, errors);
 
-                                if (FieldsMaxLength.ContainsKey(key))
-                                {
-                                    simpleElement.Trim(FieldsMaxLength[key]);
-                                }
-                            }
-                        }
-                    }
                     dataCounter++;
                     nodeCounter++;
                 }
                 return errors.Count == 0;
+            }
+
+            private void ValidateMatchingField(List<BaseElement> dataChildren, List<Node> nodeChildren, int dataCounter, int nodeCounter, Node parentNode, string path, List<string> errors)
+            {
+                if (!nodeChildren[nodeCounter].IsSimpleType != dataChildren[dataCounter] is ComplexElement)
+                {
+                    if (!nodeChildren[nodeCounter].IsArray || (dataChildren[dataCounter] is ComplexElementArray == false && dataChildren[dataCounter] is SimpleElementArray == false))
+                    {
+                        errors.Add("Wrong field type: " + dataChildren[dataCounter].Name);
+                    }
+                    else
+                    {
+                        if (nodeChildren[nodeCounter].IsArray)
+                        {
+                            if (dataChildren[dataCounter] is ComplexElementArray)
+                            {
+                                ((ComplexElementArray)dataChildren[dataCounter]).ChildType = nodeChildren[nodeCounter].ArrayBaseType.NodeType;
+                            }
+                            for (int i = 0; i < dataChildren[dataCounter].Children.Count; i++)
+                            {
+                                BaseElement arrayElement = dataChildren[dataCounter].Children[i];
+                                if (arrayElement is ComplexElementArrayItem == nodeChildren[nodeCounter].ArrayBaseType.IsSimpleType)
+                                {
+                                    errors.Add("Wrong type in array: " + path + dataChildren[dataCounter].Name);
+                                }
+                                else
+                                {
+                                    List<string> innerErrors;
+                                    if (!Validate(arrayElement, nodeChildren[nodeCounter].ArrayBaseType, String.Format("{0}{1}[{2}] --> ", path, nodeChildren[nodeCounter].NodeName, i), out innerErrors))
+                                    {
+                                        errors.AddRange(innerErrors);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (!nodeChildren[nodeCounter].IsSimpleType)
+                {
+                    List<String> innerErrors;
+                    Validate(dataChildren[dataCounter], nodeChildren[nodeCounter], String.Format("{0}{1} --> ", path, nodeChildren[nodeCounter].NodeName), out innerErrors);
+                    errors.AddRange(innerErrors);
+                }
+                else
+                {
+                    if (!String.IsNullOrWhiteSpace(parentNode.NodeName))
+                    {
+                        var simpleElement = dataChildren[dataCounter] as SimpleElement;
+                        if (simpleElement != null)
+                        {
+                            String key = String.Format("{0}.{1}", parentNode.NodeName, simpleElement.Name);
+
+                            if (FieldsMaxLength.ContainsKey(key))
+                            {
+                                simpleElement.Trim(FieldsMaxLength[key]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            private void ValidateMissingField(BaseElement data, List<Node> nodeChildren, string path, int nodeCounter, List<string> errors)
+            {
+                if (nodeChildren[nodeCounter].IsMandatory)
+                {
+                    errors.Add("Missing field: " + path + nodeChildren[nodeCounter].NodeName);
+                }
+                if (nodeChildren[nodeCounter].NodeName == "psp_SecureHash" && data is RootElement &&
+                    !data.Children.Exists(x => x.Name == "psp_ClientSession"))
+                {
+                    data.Children.Add(new SimpleElement("psp_SecureHash",
+                        ((RootElement)data).SecureHash(_wsdlHandlerConfiguration.SecretKey)));
+                }
+                if (nodeChildren[nodeCounter].NodeName == "SdkInfo")
+                {
+                    data.Children.Add(new SimpleElement("SdkInfo", SdkVersion));
+                }
+                if (data is ComplexElement && nodeChildren[nodeCounter].NodeName == "psp_MerchantAdditionalDetails")
+                {
+                    ((ComplexElement)data).Add("psp_MerchantAdditionalDetails", new ComplexElement { { "SdkInfo", SdkVersion } });
+                }
             }
 
             internal RootElement Call(BaseElement data)
@@ -658,8 +712,6 @@ namespace NpsSDK
 
             XmlDocument soapEnvelop = new XmlDocument();
 
-            //soapEnvelop.LoadXml(String.Format(@"<s:Envelope xmlns:s=""http://schemas.xmlsoap.org/soap/envelope/""><s:Body s:encodingStyle=""http://schemas.xmlsoap.org/soap/encoding/"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema""><q1:{0} xmlns:q1=""https://sandbox.nps.com.ar/ws""><{1} href=""#id1""/></q1:{0}><q2:{2} id=""id1"" xsi:type=""q2:{2}"" xmlns:q2=""https://sandbox.nps.com.ar/ws"">{3}</q2:{2}></s:Body></s:Envelope>", metodo, nombreParametroInput, tipoRequest, String.Join("", datos.Select(x => String.Format("<{0}>{1}</{0}>", x.Key, x.Value)))));
-
             soapEnvelop.LoadXml(String.Format(@"<s:Envelope xmlns:s=""http://schemas.xmlsoap.org/soap/envelope/""><s:Body s:encodingStyle=""http://schemas.xmlsoap.org/soap/encoding/"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:q2=""http://schemas.xmlsoap.org/soap/encoding/""><q1:{1} xmlns:q1=""{0}""><{2} href=""#id1""/></q1:{1}><q3:{3} id=""id1"" xsi:type=""q3:{3}"" xmlns:q3=""{0}"">{4}</q3:{3}></s:Body></s:Envelope>", url, metodo, nombreParametroInput, tipoRequest, data.Serialize()));
 
             return soapEnvelop;
@@ -674,9 +726,8 @@ namespace NpsSDK
                     soapEnvelopeXml.Save(stream);
                 }
             }
-            catch (WebException ex)
+            catch
             {
-#warning falta definir como quieren trabajar estas exceptions
                 //WebExceptionStatus.ConnectFailure --> The remote service point could not be contacted at the transport level.
                 //WebExceptionStatus.Timeout --> No response was received during the time-out period for a request
                 throw;
@@ -687,11 +738,6 @@ namespace NpsSDK
         #endregion
 
         #region Services
-
-        public ServiceDefinition GetService(String serviceName)
-        {
-            return _services.FirstOrDefault(x => x.ServiceName == serviceName);
-        }
 
         public RootElement Authorize_2p(RootElement data)
         {
@@ -832,10 +878,6 @@ namespace NpsSDK
         {
             return Call(data);
         }
-
-
-
-        //New services from developer page
 
         public RootElement RecachePaymentMethodToken(RootElement data)
         {

@@ -1,5 +1,5 @@
 ### .Net SDK
-
+<%= image_tag '../images/devicon/dot-net-original.svg', { :width => '60', :class => '.Net Client-side SDK', :alt => '' } %>
 
 #### Availability
 Supports .Net 4.5 and 4.6
@@ -7,7 +7,7 @@ Supports .Net 4.5 and 4.6
 
 #### How to install
 
-```
+```csharp
 nuget install nps_sdk
 ```
 
@@ -15,65 +15,64 @@ nuget install nps_sdk
 
 It's a basic configuration of the SDK
 
-```C#
-using IngenicoSDK;
+```csharp
+using NpsSdk;
 
-var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.IngenicoEnvironment.SandBox, "_YOUR_SECRET_KEY_", new DebugLogger()));
+var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.NpsEnvironment.SandBox, "_YOUR_SECRET_KEY_", new DebugLogger()));
 ```
 
 Here is an simple example request:
 
-```C#
-using IngenicoSDK;
+```csharp
+using NpsSdk;
 
 try
-{
-	var response = npsSdk.PayOnLine_2p(
-	    new RootElement
-	     {
-		{ "psp_Version", "2.2" },
-		{ "psp_MerchantId", "psp_test" },
-		{ "psp_TxSource", "WEB" },
-		{ "psp_MerchTxRef", "ORDER69461-3" },
-		{ "psp_MerchOrderId", "ORDER69461" },
-		{ "psp_Amount", "15050" },
-		{ "psp_NumPayments", "1" },
-		{ "psp_Currency", "032" },
-		{ "psp_Country", "ARG" },
-		{ "psp_Product", "14" },
-		{ "psp_CardNumber", "4507990000000010" },
-		{ "psp_CardExpDate", "1612" },
-		{ "psp_PosDateTime", "2016-12-01 12:00:00" },
-		{ "psp_CardSecurityCode", "325" }
-	     });
-}
+    {
+        RootElement data = new RootElement();
+
+        data.Add("psp_Version", "2.2");
+        data.Add("psp_MerchantId", "psp_test");
+        data.Add("psp_TxSource", "WEB");
+        data.Add("psp_MerchTxRef", "ORDER69461-3");
+        data.Add("psp_MerchOrderId", "ORDER69461");
+        data.Add("psp_Amount", "15050");
+        data.Add("psp_NumPayments", "1");
+        data.Add("psp_Currency", "032");
+        data.Add("psp_Country", "ARG");
+        data.Add("psp_Product", "14");
+        data.Add("psp_CardNumber", "4507990000000010");
+        data.Add("psp_CardExpDate", "1612");
+        data.Add("psp_CardSecurityCode", "325");
+        data.Add("psp_PosDateTime", "2016-12-01 12:00:00");
+        RootElement response = npsSdk.payOnLine_2p(data);
+    }
 catch (Exception ex)
-{
-	#Code to handle error
-}
+    {
+	//Code to handle error
+    }
 ```
 
 #### Environments
 
-```C#
-NpsSdk.IngenicoEnvironment.SandBox
-NpsSdk.IngenicoEnvironment.Implementation
-NpsSdk.IngenicoEnvironment.Production
+```csharp
+NpsSdk.NpsEnvironment.SandBox
+NpsSdk.NpsEnvironment.Implementation
+NpsSdk.NpsEnvironment.Production
 ```
 
 #### Error handling
 
 Exceptions must be handled by user code, when LogLevel is set to Debug they will be logged
 
-```
-#Code
+```csharp
+//Code
 try
 {
-	#code or sdk call
+	//code or sdk call
 }
 catch (Exception ex)
 {
-	#Code to handle error
+	//Code to handle error
 }
 ```
 
@@ -81,45 +80,45 @@ catch (Exception ex)
 
 Nps SDK allows you to log what’s happening with you request inside of our SDK, it logs by default to System.Diagnostics.Debug
 
-```C#
-using IngenicoSDK;
+```csharp
+using NpsSdk;
 
-var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.IngenicoEnvironment.SandBox, "_YOUR_SECRET_KEY_", new DebugLogger()));
+var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.NpsEnvironment.SandBox, "_YOUR_SECRET_KEY_", new DebugLogger()));
 ```
 
 
 If you prefer the sdk can write the output generated from the logger to the file you provided.
 
-```C#
-using IngenicoSDK;
+```csharp
+using NpsSdk;
 
-var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.IngenicoEnvironment.SandBox, "_YOUR_SECRET_KEY_", new FileLogger("path/to/your/file.log")));
+var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.NpsEnvironment.SandBox, "_YOUR_SECRET_KEY_", new FileLogger("path/to/your/file.log")));
 ```
 
 The LogLevel.Info level will write concise information of the request and will mask sensitive data of the request. 
 The LogLevel.Debug level will write information about the request to let developers debug it in a more detailed way.
 
-```C#
-using IngenicoSDK;
+```csharp
+using NpsSdk;
 
-var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.IngenicoEnvironment.SandBox, "_YOUR_SECRET_KEY_", new DebugLogger()));
+var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.NpsEnvironment.SandBox, "_YOUR_SECRET_KEY_", new DebugLogger()));
 ```
 
 you can change the timeout of the request.
 
-```C#
-using IngenicoSDK;
+```csharp
+using NpsSdk;
 
-var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.IngenicoEnvironment.SandBox, "_YOUR_SECRET_KEY_", new DebugLogger(), 60));
+var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.NpsEnvironment.SandBox, "_YOUR_SECRET_KEY_", new DebugLogger(), 60));
 ```
 
 Proxy configuration, implementation of IWebProxy
 
-```C#
-using IngenicoSDK;
+```csharp
+using NpsSdk;
 using System.Net;
 
 IWebProxy webProxy = new WebProxy();
-var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.IngenicoEnvironment.SandBox, "_YOUR_SECRET_KEY_", new DebugLogger(), 60, webProxy));
+var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.NpsEnvironment.SandBox, "_YOUR_SECRET_KEY_", new DebugLogger(), 60, webProxy));
 ```
 

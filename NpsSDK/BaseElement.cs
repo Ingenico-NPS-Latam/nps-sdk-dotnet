@@ -121,7 +121,13 @@ namespace NpsSDK
             Children.Add(complexElementArrayItem);
         }
 
-        public ComplexElementArrayItem this[Int32 index] => _typedChildren[index];
+        public ComplexElementArrayItem this[Int32 index]
+        {
+            get
+            {
+                return _typedChildren[index];
+            }
+        }
 
         public int Count { get { return _typedChildren.Count; } }
     }
