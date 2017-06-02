@@ -1,8 +1,7 @@
 ### .Net SDK
 
-
 #### Availability
-Supports .Net 4.5 and 4.6
+Supports .Net 4.0+
 
 
 #### How to install
