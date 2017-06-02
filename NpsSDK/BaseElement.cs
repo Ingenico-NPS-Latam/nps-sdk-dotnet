@@ -96,7 +96,7 @@ namespace NpsSDK
         public String this[Int32 index] { get { return Values[index]; } }
     }
 
-    public class ComplexElementArray : BaseElement, IReadOnlyCollection<ComplexElementArrayItem>
+    public class ComplexElementArray : BaseElement, IEnumerable<ComplexElementArrayItem>
     {
         internal String ChildType { set; private get; }
         public ComplexElementArray()

@@ -613,7 +613,7 @@ namespace NpsSDK
             return _types.ContainsKey(complexTypeName) ? _types[complexTypeName] : null;
         }
 
-        private RootElement Call(RootElement data, [System.Runtime.CompilerServices.CallerMemberName] string memberName = "")
+        private RootElement Call(RootElement data, string memberName)
         {
             var serviceDefinition = _services.FirstOrDefault(x => x.ServiceName == memberName);
             if (serviceDefinition == null)
@@ -741,172 +741,172 @@ namespace NpsSDK
 
         public RootElement Authorize_2p(RootElement data)
         {
-            return Call(data);
+            return Call(data, "Authorize_2p");
         }
 
         public RootElement Authorize_3p(RootElement data)
         {
-            return Call(data);
+            return Call(data, "Authorize_3p");
         }
 
         public RootElement BankPayment_2p(RootElement data)
         {
-            return Call(data);
+            return Call(data, "BankPayment_2p");
         }
 
         public RootElement BankPayment_3p(RootElement data)
         {
-            return Call(data);
+            return Call(data, "BankPayment_3p");
         }
 
         public RootElement Capture(RootElement data)
         {
-            return Call(data);
+            return Call(data, "Capture");
         }
 
         public RootElement CashPayment_3p(RootElement data)
         {
-            return Call(data);
+            return Call(data, "CashPayment_3p");
         }
 
         public RootElement ChangeSecretKey(RootElement data)
         {
-            return Call(data);
+            return Call(data, "ChangeSecretKey");
         }
 
         public RootElement CreateClientSession(RootElement data)
         {
-            return Call(data);
+            return Call(data, "CreateClientSession");
         }
 
         public RootElement CreatePaymentMethod(RootElement data)
         {
-            return Call(data);
+            return Call(data, "CreatePaymentMethod");
         }
 
         public RootElement CreatePaymentMethodFromPayment(RootElement data)
         {
-            return Call(data);
+            return Call(data, "CreatePaymentMethodFromPayment");
         }
 
         public RootElement CreatePaymentMethodToken(RootElement data)
         {
-            return Call(data);
+            return Call(data, "CreatePaymentMethodToken");
         }
 
         public RootElement DeletePaymentMethod(RootElement data)
         {
-            return Call(data);
+            return Call(data, "DeletePaymentMethod");
         }
 
         public RootElement FraudScreening(RootElement data)
         {
-            return Call(data);
+            return Call(data, "FraudScreening");
         }
 
         public RootElement GetIINDetails(RootElement data)
         {
-            return Call(data);
+            return Call(data, "GetIINDetails");
         }
 
         public RootElement GetInstallmentsOptions(RootElement data)
         {
-            return Call(data);
+            return Call(data, "GetInstallmentsOptions");
         }
 
         public RootElement NotifyFraudScreeningReview(RootElement data)
         {
-            return Call(data);
+            return Call(data, "NotifyFraudScreeningReview");
         }
 
         public RootElement PayOnLine_2p(RootElement data)
         {
-            return Call(data);
+            return Call(data, "PayOnLine_2p");
         }
 
         public RootElement PayOnLine_3p(RootElement data)
         {
-            return Call(data);
+            return Call(data, "PayOnLine_3p");
         }
 
         public RootElement QueryCardNumber(RootElement data)
         {
-            return Call(data);
+            return Call(data, "QueryCardNumber");
         }
 
         public RootElement QueryTxs(RootElement data)
         {
-            return Call(data);
+            return Call(data, "QueryTxs");
         }
 
         public RootElement Refund(RootElement data)
         {
-            return Call(data);
+            return Call(data, "Refund");
         }
 
         public RootElement RetrievePaymentMethod(RootElement data)
         {
-            return Call(data);
+            return Call(data, "RetrievePaymentMethod");
         }
 
         public RootElement RetrievePaymentMethodToken(RootElement data)
         {
-            return Call(data);
+            return Call(data, "RetrievePaymentMethodToken");
         }
 
         public RootElement SimpleQueryTx(RootElement data)
         {
-            return Call(data);
+            return Call(data, "SimpleQueryTx");
         }
 
         public RootElement SplitAuthorize_2p(RootElement data)
         {
-            return Call(data);
+            return Call(data, "SplitAuthorize_2p");
         }
 
         public RootElement SplitAuthorize_3p(RootElement data)
         {
-            return Call(data);
+            return Call(data, "SplitAuthorize_3p");
         }
 
         public RootElement SplitPayOnLine_2p(RootElement data)
         {
-            return Call(data);
+            return Call(data, "SplitPayOnLine_2p");
         }
 
         public RootElement SplitPayOnLine_3p(RootElement data)
         {
-            return Call(data);
+            return Call(data, "SplitPayOnLine_3p");
         }
 
         public RootElement RecachePaymentMethodToken(RootElement data)
         {
-            return Call(data);
+            return Call(data, "RecachePaymentMethodToken");
         }
 
         public RootElement UpdatePaymentMethod(RootElement data)
         {
-            return Call(data);
+            return Call(data, "UpdatePaymentMethod");
         }
 
         public RootElement CreateCustomer(RootElement data)
         {
-            return Call(data);
+            return Call(data, "CreateCustomer");
         }
 
         public RootElement UpdateCustomer(RootElement data)
         {
-            return Call(data);
+            return Call(data, "UpdateCustomer");
         }
 
         public RootElement DeleteCustomer(RootElement data)
         {
-            return Call(data);
+            return Call(data, "DeleteCustomer");
         }
 
         public RootElement RetrieveCustomer(RootElement data)
         {
-            return Call(data);
+            return Call(data, "RetrieveCustomer");
         }
 
         #endregion
