@@ -1,4 +1,5 @@
 ### .Net SDK
+<%= image_tag '../images/devicon/dot-net-original.svg', { :width => '60', :class => '.Net Client-side SDK', :alt => '' } %>
 
 #### Availability
 Supports .Net 4.0 and above 
@@ -43,7 +44,7 @@ try
         data.Add("psp_CardExpDate", "1612");
         data.Add("psp_CardSecurityCode", "325");
         data.Add("psp_PosDateTime", "2016-12-01 12:00:00");
-        RootElement response = npsSdk.payOnLine_2p(data);
+        RootElement response = npsSdk.PayOnLine_2p(data);
     }
 catch (Exception ex)
     {
