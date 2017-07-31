@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Web.Services.Description;
 using System.Xml;
 using System.Xml.Schema;
@@ -111,15 +113,36 @@ namespace NpsSDK
             /// <param name="secretKey"></param>
             /// <param name="logger"></param>
             /// <param name="requestTimeout">The number of seconds to wait before the request times out. The default value is 100 seconds</param>
-            /// <param name="proxy"></param>
-            public WsdlHandlerConfiguration(LogLevel logLevel, NpsEnvironment npsEnvironment, String secretKey, ILogger logger = null, Int32 requestTimeout = 100, IWebProxy proxy = null)
+            /// <param name="ignoreSslValidation">Ignore SSL certificate validation at application level. Every certificate validation will be skipped.</param>
+            public WsdlHandlerConfiguration(LogLevel logLevel, NpsEnvironment npsEnvironment, String secretKey, ILogger logger = null, Int32 requestTimeout = 100, Boolean ignoreSslValidation = false)
             {
                 _logLevel = logLevel;
                 _npsEnvironment = npsEnvironment;
                 _secretKey = secretKey;
                 _requestTimeOut = requestTimeout;
-                _proxy = proxy;
+                _proxy = null;
                 _logger = new LogWrapper(logLevel, logger ?? new DebugLogger());
+                _ignoreSslValidation = ignoreSslValidation;
+            }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="logLevel"></param>
+            /// <param name="npsEnvironment"></param>
+            /// <param name="secretKey"></param>
+            /// <param name="url">Proxy url</param>
+            /// <param name="port">Proxy port</param>
+            /// <param name="user">Proxy user</param>
+            /// <param name="pass">Proxy password</param>
+            /// <param name="logger"></param>
+            /// <param name="requestTimeout">The number of seconds to wait before the request times out. The default value is 100 seconds</param>
+            /// <param name="ignoreSslValidation">Ignore SSL certificate validation at application level. Every certificate validation will be skipped.</param>
+            public WsdlHandlerConfiguration(LogLevel logLevel, NpsEnvironment npsEnvironment, String secretKey, String url, Int32 port, String user, String pass, ILogger logger = null, Int32 requestTimeout = 100, Boolean ignoreSslValidation = false) : this(logLevel, npsEnvironment, secretKey, logger, requestTimeout, ignoreSslValidation)
+            {
+                var proxyUri = new Uri(String.Format("{0}:{1}", url, port));
+                ICredentials credentials = new NetworkCredential(user, pass);
+                _proxy = new WebProxy(proxyUri, true, null, credentials);
             }
 
             private NpsEnvironment _npsEnvironment;
@@ -128,6 +151,7 @@ namespace NpsSDK
             private LogWrapper _logger;
             private Int32 _requestTimeOut;
             private IWebProxy _proxy;
+            private Boolean _ignoreSslValidation;
 
             internal NpsEnvironment NpsEnvironment
             {
@@ -159,12 +183,9 @@ namespace NpsSDK
                 get { return _proxy; }
             }
 
-            internal String LocalWsdlPath
+            internal Boolean IgnoreSslValidation
             {
-                get
-                {
-                    return Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetCallingAssembly().Location) ?? String.Empty, String.Format("{0}.wsdl", NpsEnvironment.ToString().ToLower()));
-                }
+                get { return _ignoreSslValidation; }
             }
 
             internal String ServiceUrl
@@ -195,15 +216,26 @@ namespace NpsSDK
                     throw new ArgumentException("LogLevel can't be set to Debug on Production environment", "wsdlHandlerConfiguration");
                 }
 
+                if (wsdlHandlerConfiguration.IgnoreSslValidation && wsdlHandlerConfiguration.NpsEnvironment == NpsEnvironment.Production)
+                {
+                    throw new ArgumentException("IgnoreSslValidation can't be set to true on Production environment", "wsdlHandlerConfiguration");
+                }
+
                 _wsdlHandlerConfiguration = wsdlHandlerConfiguration;
 
-                var pathWsdl = _wsdlHandlerConfiguration.LocalWsdlPath;
-                if (!File.Exists(pathWsdl) && !DownloadWsdl(pathWsdl))
+                if (_wsdlHandlerConfiguration.IgnoreSslValidation)
+                {
+                    ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+                }
+
+                var assembly = Assembly.GetExecutingAssembly();
+                Stream stream = assembly.GetManifestResourceStream(typeof(NpsSdk), String.Format("{0}.wsdl", _wsdlHandlerConfiguration.NpsEnvironment.ToString().ToLower()));
+                if (stream == null)
                 {
                     throw new FileNotFoundException("Missing local WSDL");
                 }
 
-                var serviceDescription = ServiceDescription.Read(pathWsdl);
+                var serviceDescription = ServiceDescription.Read(stream);
 
                 _types = GetTypes(serviceDescription);
 
