@@ -1,0 +1,8 @@
+NpsSDK/LICENSE
+NpsSDK/*.nupkg
+NpsSDK/NpsSDK.nuspec
+NpsSDK/README.md
+NpsSDK/bin/
+NpsSDK/cs/
+NpsSDK/obj
+NpsSDK/nuget.exe
