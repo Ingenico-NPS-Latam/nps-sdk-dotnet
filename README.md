@@ -1,5 +1,4 @@
 ### .Net SDK
-<%= image_tag '../images/devicon/dot-net-original.svg', { :width => '60', :class => '.Net Client-side SDK', :alt => '' } %>
 
 #### Availability
 Supports .Net 4.0 and above 
