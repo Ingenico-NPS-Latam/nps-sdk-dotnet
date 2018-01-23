@@ -452,7 +452,7 @@ namespace NpsSDK
 
             private void ValidateMissingField(BaseElement data, List<Node> nodeChildren, string path, int nodeCounter, List<string> errors)
             {
-                if (nodeChildren[nodeCounter].IsMandatory)
+                if (nodeChildren[nodeCounter].IsMandatory && nodeChildren[nodeCounter].NodeName != "psp_SecureHash")
                 {
                     errors.Add("Missing field: " + path + nodeChildren[nodeCounter].NodeName);
                 }
