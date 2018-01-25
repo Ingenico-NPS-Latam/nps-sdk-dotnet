@@ -1,16 +1,16 @@
-### .Net SDK
+# .Net SDK
 
-#### Availability
+## Availability
 Supports .Net 4.0 and above 
 
 
-#### How to install
+## How to install
 
 ```csharp
 nuget install nps_sdk
 ```
 
-#### Configuration
+## Configuration
 
 It's a basic configuration of the SDK
 
@@ -51,7 +51,7 @@ catch (Exception ex)
     }
 ```
 
-#### Environments
+## Environments
 
 ```csharp
 NpsSdk.NpsEnvironment.SandBox
@@ -59,7 +59,7 @@ NpsSdk.NpsEnvironment.Implementation
 NpsSdk.NpsEnvironment.Production
 ```
 
-#### Error handling
+## Error handling
 
 Exceptions must be handled by user code, when LogLevel is set to Debug they will be logged
 
@@ -75,7 +75,7 @@ catch (Exception ex)
 }
 ```
 
-#### Advanced configurations
+## Advanced configurations
 
 Nps SDK allows you to log what’s happening with you request inside of our SDK, it logs by default to System.Diagnostics.Debug
 
