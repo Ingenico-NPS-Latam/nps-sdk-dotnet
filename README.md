@@ -86,6 +86,9 @@ var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsS
 ```
 
 
+Sanitize allows the SDK to truncate to a fixed size some fields that could make request fail, like extremely long name. (In this SDK it's done automatically)
+
+
 If you prefer the sdk can write the output generated from the logger to the file you provided.
 
 ```csharp
@@ -104,6 +107,9 @@ var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsS
 ```
 
 you can change the timeout of the request.
+
+ExecutionTimeout(Default=60 seconds): you can change the execution timeout of the request.
+
 
 ```csharp
 using NpsSdk;
