@@ -211,6 +211,9 @@ namespace NpsSDK
         {
             try
             {
+
+                _wsdlHandlerConfiguration = wsdlHandlerConfiguration;
+
                 if (wsdlHandlerConfiguration.LogLevel == LogLevel.Debug && wsdlHandlerConfiguration.NpsEnvironment == NpsEnvironment.Production)
                 {
                     throw new ArgumentException("LogLevel can't be set to Debug on Production environment", "wsdlHandlerConfiguration");
@@ -220,8 +223,7 @@ namespace NpsSDK
                 {
                     throw new ArgumentException("IgnoreSslValidation can't be set to true on Production environment", "wsdlHandlerConfiguration");
                 }
-
-                _wsdlHandlerConfiguration = wsdlHandlerConfiguration;
+                              
 
                 if (_wsdlHandlerConfiguration.IgnoreSslValidation)
                 {

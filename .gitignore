@@ -6,3 +6,4 @@ NpsSDK/bin/
 NpsSDK/cs/
 NpsSDK/obj
 NpsSDK/nuget.exe
+test/*
