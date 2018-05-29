@@ -127,6 +127,7 @@ IWebProxy webProxy = new WebProxy();
 var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.NpsEnvironment.SandBox, "_YOUR_SECRET_KEY_", new DebugLogger(), 60, webProxy));
 ```
 
+Our servers uses TLS 1.2 Cryptographic Protocol
 
 TLS Configuration .Net Framework 4.0: (it must be applied in the main application)
 
