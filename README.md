@@ -139,7 +139,7 @@ using System.Net;
 System.Net.ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | (SecurityProtocolType)768 | (SecurityProtocolType)3072;
 ```
 
-TLS Configuration .Net Framework 4.5+: (it must be applied in the main application)
+TLS Configuration .Net Framework 4.5+: (it must be applied in the main application only if the default value of the SecurityProtocol was previously changed)
 
 ```csharp
 using NpsSdk;
