@@ -114,7 +114,7 @@ namespace NpsSDK
             /// <param name="logger"></param>
             /// <param name="requestTimeout">The number of seconds to wait before the request times out. The default value is 100 seconds</param>
             /// <param name="ignoreSslValidation">Ignore SSL certificate validation at application level. Every certificate validation will be skipped.</param>
-            public WsdlHandlerConfiguration(LogLevel logLevel, NpsEnvironment npsEnvironment, String secretKey, ILogger logger = null, Int32 requestTimeout = 100, Boolean ignoreSslValidation = false, SecurityProtocolType tls = (SecurityProtocolType)3072)
+            public WsdlHandlerConfiguration(LogLevel logLevel, NpsEnvironment npsEnvironment, String secretKey, ILogger logger = null, Int32 requestTimeout = 100, Boolean ignoreSslValidation = false)
             {
                 _logLevel = logLevel;
                 _npsEnvironment = npsEnvironment;
@@ -123,9 +123,6 @@ namespace NpsSDK
                 _proxy = null;
                 _logger = new LogWrapper(logLevel, logger ?? new DebugLogger());
                 _ignoreSslValidation = ignoreSslValidation;
-                _tls = tls;
-
-
             }
 
             /// <summary>
@@ -141,7 +138,7 @@ namespace NpsSDK
             /// <param name="logger"></param>
             /// <param name="requestTimeout">The number of seconds to wait before the request times out. The default value is 100 seconds</param>
             /// <param name="ignoreSslValidation">Ignore SSL certificate validation at application level. Every certificate validation will be skipped.</param>
-            public WsdlHandlerConfiguration(LogLevel logLevel, NpsEnvironment npsEnvironment, String secretKey, String url, Int32 port, String user, String pass, ILogger logger = null, Int32 requestTimeout = 100, Boolean ignoreSslValidation = false, SecurityProtocolType tls = (SecurityProtocolType)3072) : this(logLevel, npsEnvironment, secretKey, logger, requestTimeout, ignoreSslValidation, tls)
+            public WsdlHandlerConfiguration(LogLevel logLevel, NpsEnvironment npsEnvironment, String secretKey, String url, Int32 port, String user, String pass, ILogger logger = null, Int32 requestTimeout = 100, Boolean ignoreSslValidation = false) : this(logLevel, npsEnvironment, secretKey, logger, requestTimeout, ignoreSslValidation)
             {
                 var proxyUri = new Uri(String.Format("{0}:{1}", url, port));
                 ICredentials credentials = new NetworkCredential(user, pass);
@@ -155,7 +152,6 @@ namespace NpsSDK
             private Int32 _requestTimeOut;
             private IWebProxy _proxy;
             private Boolean _ignoreSslValidation;
-            private SecurityProtocolType _tls;
 
             internal NpsEnvironment NpsEnvironment
             {
@@ -190,11 +186,6 @@ namespace NpsSDK
             internal Boolean IgnoreSslValidation
             {
                 get { return _ignoreSslValidation; }
-            }
-
-            internal SecurityProtocolType Tls 
-            {
-                get { return _tls; }
             }
 
             internal String ServiceUrl
@@ -536,12 +527,6 @@ namespace NpsSDK
 
             private HttpWebRequest CreateWebRequest()
             {
-
-                System.Net.ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | (SecurityProtocolType)768 | (SecurityProtocolType)3072;
-
-                if (_wsdlHandlerConfiguration.Tls != (SecurityProtocolType)3072) {
-                    System.Net.ServicePointManager.SecurityProtocol |=  _wsdlHandlerConfiguration.Tls;
-                }
                 var action = _wsdlHandlerConfiguration.ServiceUrl + "/" + ServiceName;
 
                 HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(_wsdlHandlerConfiguration.ServiceUrl);
