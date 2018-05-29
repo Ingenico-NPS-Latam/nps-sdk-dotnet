@@ -127,3 +127,23 @@ IWebProxy webProxy = new WebProxy();
 var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.NpsEnvironment.SandBox, "_YOUR_SECRET_KEY_", new DebugLogger(), 60, webProxy));
 ```
 
+
+TLS Configuration .Net Framework 4.0: (it must be applied in the main application)
+
+
+```csharp
+using NpsSdk;
+using System.Net;
+
+System.Net.ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | (SecurityProtocolType)768 | (SecurityProtocolType)3072;
+```
+
+TLS Configuration .Net Framework 4.5+: (it must be applied in the main application)
+
+```csharp
+using NpsSdk;
+using System.Net;
+
+System.Net.ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+```
+
