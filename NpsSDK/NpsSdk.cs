@@ -13,7 +13,7 @@ namespace NpsSDK
 {
     public class NpsSdk
     {
-        private const String SdkVersion = ".Net 1.0.0";
+        private const String SdkVersion = ".Net SDK Version 1.0.24";
 
         #region Sanitize
 
@@ -138,7 +138,7 @@ namespace NpsSDK
             /// <param name="logger"></param>
             /// <param name="requestTimeout">The number of seconds to wait before the request times out. The default value is 100 seconds</param>
             /// <param name="ignoreSslValidation">Ignore SSL certificate validation at application level. Every certificate validation will be skipped.</param>
-            public WsdlHandlerConfiguration(LogLevel logLevel, NpsEnvironment npsEnvironment, String secretKey, String url, Int32 port, String user, String pass, ILogger logger = null, Int32 requestTimeout = 100, Boolean ignoreSslValidation = false) : this(logLevel, npsEnvironment, secretKey, logger, requestTimeout, ignoreSslValidation)
+            public WsdlHandlerConfiguration(LogLevel logLevel, NpsEnvironment npsEnvironment, String secretKey, String url, Int32 port, String user, String pass, ILogger logger = null, Int32 requestTimeout = 60, Boolean ignoreSslValidation = false) : this(logLevel, npsEnvironment, secretKey, logger, requestTimeout, ignoreSslValidation)
             {
                 var proxyUri = new Uri(String.Format("{0}:{1}", url, port));
                 ICredentials credentials = new NetworkCredential(user, pass);

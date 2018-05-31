@@ -21,7 +21,16 @@ namespace NpsSDK
     public class SimpleElement : BaseElement
     {
         private String Value { get; set; }
-        public override string Serialize() { return String.Format("<{0}>{1}</{0}>", Name, Value); }
+
+        private String EscapeSpecialCharacters(String value)
+        {
+            value = value.Replace("&", "&amp;");
+            value = value.Replace("<", "&lt;");
+            value = value.Replace(">", "&gt;");
+            return value;
+        }
+
+        public override string Serialize() { return String.Format("<{0}>{1}</{0}>", Name, this.EscapeSpecialCharacters(Value)); }
 
         internal void Trim(Int32 maxLength)
         {
