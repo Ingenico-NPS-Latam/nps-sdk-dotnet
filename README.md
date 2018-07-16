@@ -85,19 +85,6 @@ using NpsSdk;
 var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.NpsEnvironment.SandBox, "_YOUR_SECRET_KEY_", new DebugLogger()));
 ```
 
-### Sanitize
-
-Sanitize allows the SDK to truncate to a fixed size some fields that could make request fail, like extremely long name. (In this SDK it's done automatically)
-
-
-If you prefer the sdk can write the output generated from the logger to the file you provided.
-
-```csharp
-using NpsSdk;
-
-var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.NpsEnvironment.SandBox, "_YOUR_SECRET_KEY_", new FileLogger("path/to/your/file.log")));
-```
-
 ### LogLevel
 
 The LogLevel.Info level will write concise information of the request and will mask sensitive data of the request. 
