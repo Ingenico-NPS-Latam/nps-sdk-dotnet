@@ -85,7 +85,7 @@ using NpsSdk;
 var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.NpsEnvironment.SandBox, "_YOUR_SECRET_KEY_", new DebugLogger()));
 ```
 
-<<<<<<< HEAD
+
 ### Sanitize
 
 Sanitize allows the SDK to truncate to a fixed size some fields that could make request fail, like extremely long name. (In this SDK it's done automatically)
@@ -98,9 +98,6 @@ using NpsSdk;
 
 var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.NpsEnvironment.SandBox, "_YOUR_SECRET_KEY_", new FileLogger("path/to/your/file.log")));
 ```
-=======
-### LogLevel
->>>>>>> 0f3531ec5f13afa4a94e7356a6fe781a85e04e87
 
 ### LogLevel
 
