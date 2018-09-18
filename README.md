@@ -111,7 +111,7 @@ var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsS
 ```
 
 ### Timeout
-you can change the timeout of the request.
+You can change the timeout of the request.
 
 ExecutionTimeout(Default=60 seconds): you can change the execution timeout of the request.
 
