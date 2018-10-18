@@ -124,14 +124,13 @@ var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsS
 
 ### Proxy
 
-Proxy configuration, implementation of IWebProxy
+Proxy configuration. Take into account that the parameter 8989 is proxy's port.
 
 ```csharp
 using NpsSdk;
 using System.Net;
 
-IWebProxy webProxy = new WebProxy();
-var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.NpsEnvironment.SandBox, "_YOUR_SECRET_KEY_", new DebugLogger(), 60, webProxy));
+var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.NpsEnvironment.SandBox, "_YOUR_SECRET_KEY_", "YOUR_PROXY_URL", 8989, "YOUR_USER", "YOUR_PASSWORD", new DebugLogger(), 60));
 ```
 
 ### Tls Configuration (4.0)
