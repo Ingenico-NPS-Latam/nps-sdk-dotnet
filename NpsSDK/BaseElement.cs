@@ -158,7 +158,8 @@ namespace NpsSDK
 
         public String SecureHash(String secretKey)
         {
-            return GetMd5Hash(SecureHashConcatenatedValues + secretKey);
+            //return GetMd5Hash(SecureHashConcatenatedValues + secretKey);
+            return GetHmacSha256Hash(SecureHashConcatenatedValues, secretKey);
         }
 
         private static readonly MD5 Md5 = MD5.Create();
@@ -168,6 +169,26 @@ namespace NpsSDK
             StringBuilder sBuilder = new StringBuilder();
             foreach (byte t in data) { sBuilder.Append(t.ToString("x2")); }
             return sBuilder.ToString();
+        }
+
+        private static string GetHmacSha256Hash(string message, string key)
+        {
+            byte[] keyByte = new ASCIIEncoding().GetBytes(key);
+            byte[] messageBytes = new ASCIIEncoding().GetBytes(message);
+
+            byte[] hashmessage = new HMACSHA256(keyByte).ComputeHash(messageBytes);
+
+            return String.Concat(Array.ConvertAll(hashmessage, x => x.ToString("x2")));
+        }
+
+        private static string GetHmacSha512Hash(string message, string key)
+        {
+            byte[] keyByte = new ASCIIEncoding().GetBytes(key);
+            byte[] messageBytes = new ASCIIEncoding().GetBytes(message);
+
+            byte[] hashmessage = new HMACSHA512(keyByte).ComputeHash(messageBytes);
+
+            return String.Concat(Array.ConvertAll(hashmessage, x => x.ToString("x2")));
         }
     }
 }
