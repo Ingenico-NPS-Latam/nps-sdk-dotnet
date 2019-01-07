@@ -158,7 +158,6 @@ namespace NpsSDK
 
         public String SecureHash(String secretKey)
         {
-            //return GetMd5Hash(SecureHashConcatenatedValues + secretKey);
             return GetHmacSha256Hash(SecureHashConcatenatedValues, secretKey);
         }
 
