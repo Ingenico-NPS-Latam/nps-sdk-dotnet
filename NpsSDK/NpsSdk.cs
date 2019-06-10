@@ -13,7 +13,7 @@ namespace NpsSDK
 {
     public class NpsSdk
     {
-        private const String SdkVersion = ".Net SDK Version 1.0.29"; 
+        private const String SdkVersion = ".Net SDK Version 1.1.0"; 
 
         #region Sanitize
 
