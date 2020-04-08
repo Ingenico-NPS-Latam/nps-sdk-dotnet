@@ -133,6 +133,26 @@ using System.Net;
 var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Debug, NpsSdk.NpsEnvironment.SandBox, "_YOUR_SECRET_KEY_", "YOUR_PROXY_URL", 8989, "YOUR_USER", "YOUR_PASSWORD", new DebugLogger(), 60));
 ```
 
+### CustomUrls
+
+Optional configuration which allow you to specify different urls to use as the environment for the SDK.
+
+You need to configure SDKs environment to CustomEnv and create a URLs list which will be used as CustomEnv.
+The SDK will use the first URL specified in customEnvUrls parameter and try to connect. 
+If the connection cannot be established after several retries, the SDK will proceed with the next url.
+
+ ```csharp
+using NpsSdk;
+using System.Net;
+
+string[] customEnvUrls = new string [] {
+    "https://first_url.com.ar",
+    "https://second_url.com.ar"    
+};
+
+var npsSdk = new NpsSdk(new NpsSdk.WsdlHandlerConfiguration(LogLevel.Info, NpsSdk.NpsEnvironment.CustomEnv, "_YOUR_SECRET_KEY_", new DebugLogger(), customEnvUrls));
+```
+
 ### Tls Configuration (4.0)
 
 Our servers uses TLS 1.2 Cryptographic Protocol
