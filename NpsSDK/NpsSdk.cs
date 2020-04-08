@@ -13,7 +13,8 @@ namespace NpsSDK
 {
     public class NpsSdk
     {
-        private const String SdkVersion = ".Net SDK Version 1.1.0"; 
+        private const String SdkVersion = ".Net SDK Version 1.1.1";
+        public const int MaxCustomUrls = 2;
 
         #region Sanitize
 
@@ -96,7 +97,8 @@ namespace NpsSDK
         {
             SandBox,
             Staging,
-            Production
+            Production,
+            CustomEnv
         }
 
         #endregion
@@ -111,14 +113,16 @@ namespace NpsSDK
             /// <param name="logLevel"></param>
             /// <param name="npsEnvironment"></param>
             /// <param name="secretKey"></param>
+            /// <param name="customEnvUrls"></param>
             /// <param name="logger"></param>
             /// <param name="requestTimeout">The number of seconds to wait before the request times out. The default value is 100 seconds</param>
             /// <param name="ignoreSslValidation">Ignore SSL certificate validation at application level. Every certificate validation will be skipped.</param>
-            public WsdlHandlerConfiguration(LogLevel logLevel, NpsEnvironment npsEnvironment, String secretKey, ILogger logger = null, Int32 requestTimeout = 100, Boolean ignoreSslValidation = false)
+            public WsdlHandlerConfiguration(LogLevel logLevel, NpsEnvironment npsEnvironment, String secretKey, ILogger logger = null, string[] customEnvUrls = null, Int32 requestTimeout = 100, Boolean ignoreSslValidation = false)
             {
                 _logLevel = logLevel;
                 _npsEnvironment = npsEnvironment;
                 _secretKey = secretKey;
+                _customEnvUrls = customEnvUrls;
                 _requestTimeOut = requestTimeout;
                 _proxy = null;
                 _logger = new LogWrapper(logLevel, logger ?? new DebugLogger());
@@ -135,10 +139,12 @@ namespace NpsSDK
             /// <param name="port">Proxy port</param>
             /// <param name="user">Proxy user</param>
             /// <param name="pass">Proxy password</param>
+            /// <param name="customEnvUrls"></param>
             /// <param name="logger"></param>
             /// <param name="requestTimeout">The number of seconds to wait before the request times out. The default value is 100 seconds</param>
             /// <param name="ignoreSslValidation">Ignore SSL certificate validation at application level. Every certificate validation will be skipped.</param>
-            public WsdlHandlerConfiguration(LogLevel logLevel, NpsEnvironment npsEnvironment, String secretKey, String url, Int32 port, String user, String pass, ILogger logger = null, Int32 requestTimeout = 60, Boolean ignoreSslValidation = false) : this(logLevel, npsEnvironment, secretKey, logger, requestTimeout, ignoreSslValidation)
+            public WsdlHandlerConfiguration(LogLevel logLevel, NpsEnvironment npsEnvironment, String secretKey, String url, Int32 port, String user, String pass, string[] customEnvUrls = null, ILogger logger = null, Int32 requestTimeout = 60, Boolean ignoreSslValidation = false)
+                : this(logLevel, npsEnvironment, secretKey, logger, customEnvUrls, requestTimeout, ignoreSslValidation)
             {
                 var proxyUri = new Uri(String.Format("{0}:{1}", url, port));
                 ICredentials credentials = new NetworkCredential(user, pass);
@@ -152,10 +158,16 @@ namespace NpsSDK
             private Int32 _requestTimeOut;
             private IWebProxy _proxy;
             private Boolean _ignoreSslValidation;
+            private string[] _customEnvUrls;
 
             internal NpsEnvironment NpsEnvironment
             {
                 get { return _npsEnvironment; }
+            }
+
+            internal string[] customEnvUrls
+            {
+                get { return _customEnvUrls; }
             }
 
             internal LogLevel LogLevel
@@ -200,6 +212,8 @@ namespace NpsSDK
                             return "https://implementacion.nps.com.ar/ws.php";
                         case NpsEnvironment.Production:
                             return "https://services2.nps.com.ar/ws.php";
+                        case NpsEnvironment.CustomEnv:
+                            return "https://services2.nps.com.ar/ws.php";
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
@@ -209,6 +223,7 @@ namespace NpsSDK
 
         public NpsSdk(WsdlHandlerConfiguration wsdlHandlerConfiguration)
         {
+
             try
             {
 
@@ -223,15 +238,52 @@ namespace NpsSDK
                 {
                     throw new ArgumentException("IgnoreSslValidation can't be set to true on Production environment", "wsdlHandlerConfiguration");
                 }
-                              
 
                 if (_wsdlHandlerConfiguration.IgnoreSslValidation)
                 {
                     ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
                 }
 
+                if (_wsdlHandlerConfiguration.NpsEnvironment == NpsEnvironment.CustomEnv)
+                {
+                    if (_wsdlHandlerConfiguration.customEnvUrls == null)
+                    {
+                        throw new ArgumentException("customEnvUrls cannot be empty using CUSTOM_ENV environment", "wsdlHandlerConfiguration");
+                    }
+                }
+
+                if (wsdlHandlerConfiguration.customEnvUrls != null)
+                {
+                    if (wsdlHandlerConfiguration.NpsEnvironment != NpsEnvironment.CustomEnv)
+                    {
+                        throw new ArgumentException("Only CUSTOM_ENV environment is available with customEnvUrls", "wsdlHandlerConfiguration");
+                    }
+
+                    if (_wsdlHandlerConfiguration.customEnvUrls.Length == 0)
+                    {
+                        throw new Exception("customEnvUrls cannot by empty");
+                    }
+
+                    if (_wsdlHandlerConfiguration.customEnvUrls.Length > MaxCustomUrls)
+                    {
+                        throw new Exception(String.Format("customEnvUrls must contain at most {0} urls", MaxCustomUrls));
+                    }
+
+                    foreach (string url in _wsdlHandlerConfiguration.customEnvUrls)
+                    {
+                         if (!(Uri.IsWellFormedUriString(url, UriKind.Absolute))) {
+                             throw new Exception(String.Format("Invalid URL - {0}", url));
+                         }
+                    }
+
+                }
+
                 var assembly = Assembly.GetExecutingAssembly();
-                Stream stream = assembly.GetManifestResourceStream(typeof(NpsSdk), String.Format("{0}.wsdl", _wsdlHandlerConfiguration.NpsEnvironment.ToString().ToLower()));
+                Stream stream = assembly.GetManifestResourceStream(typeof(NpsSdk), String.Format("{0}.wsdl", 
+                    (_wsdlHandlerConfiguration.NpsEnvironment == NpsEnvironment.CustomEnv 
+                    ? NpsEnvironment.Production.ToString().ToLower() 
+                    : _wsdlHandlerConfiguration.NpsEnvironment.ToString().ToLower())));
+                    
                 if (stream == null)
                 {
                     throw new FileNotFoundException("Missing local WSDL");
@@ -482,10 +534,40 @@ namespace NpsSDK
                     throw new Exception(String.Join("\n", errors));
                 }
 
-                XmlDocument soapEnvelopeXml = CreateSoapEnvelope(_wsdlHandlerConfiguration.ServiceUrl, ServiceName, InputParameterName, InputType, data);
-                HttpWebRequest webRequest = CreateWebRequest();
-                InsertSoapEnvelopeIntoWebRequest(soapEnvelopeXml, webRequest);
+                HttpWebRequest webRequest = null;
+                XmlDocument soapEnvelopeXml = null;
 
+                if (_wsdlHandlerConfiguration.customEnvUrls != null)
+                {
+                    Int32 requestTimeoutLeft = _wsdlHandlerConfiguration.RequestTimeout;
+                    foreach (string url in _wsdlHandlerConfiguration.customEnvUrls)
+                    {
+                        var watch = System.Diagnostics.Stopwatch.StartNew();
+                        soapEnvelopeXml = CreateSoapEnvelope(url, ServiceName, InputParameterName, InputType, data);
+                        try
+                        {
+                            webRequest = CreateWebRequest(url, requestTimeoutLeft);
+                            InsertSoapEnvelopeIntoWebRequest(soapEnvelopeXml, webRequest);
+                            watch.Stop();
+                            break;
+                        }
+                        catch (System.Net.WebException)
+                        {
+                            _wsdlHandlerConfiguration.Logger.Log(LogLevel.Info, String.Format("Could not connect to {0}", url));
+                            watch.Stop();
+                            var elapsedMs = watch.ElapsedMilliseconds;
+                            requestTimeoutLeft = requestTimeoutLeft - (Int32)Math.Ceiling((double)elapsedMs / 1000);
+                            continue;
+                        }
+                    }
+                }
+                else
+                {
+                    soapEnvelopeXml = CreateSoapEnvelope(_wsdlHandlerConfiguration.ServiceUrl, ServiceName, InputParameterName, InputType, data);
+                    webRequest = CreateWebRequest(_wsdlHandlerConfiguration.ServiceUrl, _wsdlHandlerConfiguration.RequestTimeout);
+                    InsertSoapEnvelopeIntoWebRequest(soapEnvelopeXml, webRequest);
+                }
+                
                 _wsdlHandlerConfiguration.Logger.LogRequest(LogLevel.Info, soapEnvelopeXml);
 
                 RootElement rootElement = new RootElement();
@@ -525,14 +607,14 @@ namespace NpsSDK
                 return rootElement;
             }
 
-            private HttpWebRequest CreateWebRequest()
+            private HttpWebRequest CreateWebRequest(String url, Int32 requestTimeout)
             {
-                var action = _wsdlHandlerConfiguration.ServiceUrl + "/" + ServiceName;
+                var action = url + "/" + ServiceName;
 
-                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(_wsdlHandlerConfiguration.ServiceUrl);
+                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url);
 
                 if (_wsdlHandlerConfiguration.Proxy != null) { webRequest.Proxy = _wsdlHandlerConfiguration.Proxy; }
-                webRequest.Timeout = _wsdlHandlerConfiguration.RequestTimeout * 1000;
+                webRequest.Timeout = requestTimeout * 1000;
 
                 webRequest.Headers.Add("SOAPAction", action);
                 webRequest.ContentType = "text/xml;charset=\"utf-8\"";
